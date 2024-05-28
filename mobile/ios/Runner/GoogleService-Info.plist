@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyByiJKieYeESSDtoijW19LOmx5ywsfEyuY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>643936112902</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.tunisietelecom.xcmobile</string>
+	<key>PROJECT_ID</key>
+	<string>xpress-connect-tt</string>
+	<key>STORAGE_BUCKET</key>
+	<string>xpress-connect-tt.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:643936112902:ios:70580116e4c540cbe5ce87</string>
+</dict>
+</plist>

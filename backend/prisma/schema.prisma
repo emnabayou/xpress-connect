@@ -1,0 +1,2331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model activation_cna {
+  id                                                Int             @id @default(autoincrement())
+  activated_by                                      Int?
+  distributeur_id                                   Int?
+  msisdn_history_id                                 Int?            @unique(map: "UNIQ_3E6A4C93E5B80C40")
+  msisdn                                            Int
+  sim                                               BigInt
+  digitalised                                       Boolean?        @default(false)
+  action_at                                         DateTime        @db.DateTime(0)
+  channel                                           String?         @db.VarChar(50)
+  brand                                             String?         @db.VarChar(50)
+  piece_identif                                     Int?            @db.SmallInt
+  cin_pp                                            String?         @db.VarChar(50)
+  pays                                              String?         @db.VarChar(70)
+  fos_user_activation_cna_activated_byTofos_user    fos_user?       @relation("activation_cna_activated_byTofos_user", fields: [activated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3E6A4C93255FA5E4")
+  fos_user_activation_cna_distributeur_idTofos_user fos_user?       @relation("activation_cna_distributeur_idTofos_user", fields: [distributeur_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3E6A4C9329EB7ACA")
+  msisdn_history                                    msisdn_history? @relation(fields: [msisdn_history_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3E6A4C93E5B80C40")
+
+  @@index([brand], map: "IDX_3E6A4C931C52F958")
+  @@index([activated_by], map: "IDX_3E6A4C93255FA5E4")
+  @@index([distributeur_id], map: "IDX_3E6A4C9329EB7ACA")
+  @@index([sim], map: "IDX_3E6A4C932ECAC210")
+  @@index([sim, action_at], map: "IDX_3E6A4C932ECAC210485C6A59")
+  @@index([action_at], map: "IDX_3E6A4C93485C6A59")
+  @@index([channel], map: "IDX_3E6A4C93A2F98E47")
+  @@index([msisdn], map: "IDX_3E6A4C93D8AB44")
+}
+
+model administrator_contact {
+  id                          Int                           @id @default(autoincrement())
+  fullname                    String                        @db.VarChar(100)
+  phone                       Int                           @unique(map: "UNIQ_297DEBD7444F97DD")
+  email                       String                        @db.LongText
+  administratorcontact_report administratorcontact_report[]
+}
+
+model administratorcontact_report {
+  administratorcontact_id Int
+  report_id               Int
+  report                  report                @relation(fields: [report_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A20923CF4BD2A4C0")
+  administrator_contact   administrator_contact @relation(fields: [administratorcontact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_A20923CFD6A72D6")
+
+  @@id([administratorcontact_id, report_id])
+  @@index([report_id], map: "IDX_A20923CF4BD2A4C0")
+  @@index([administratorcontact_id], map: "IDX_A20923CFD6A72D6")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model anomalie {
+  id                                                                                 Int                       @id @default(autoincrement())
+  name                                                                               String                    @unique(map: "UNIQ_715AA19C5E237E06") @db.VarChar(255)
+  description                                                                        String?                   @db.LongText
+  created_at                                                                         DateTime                  @db.DateTime(0)
+  updated_at                                                                         DateTime?                 @db.DateTime(0)
+  enable                                                                             Boolean                   @default(true)
+  automatic                                                                          Boolean?                  @default(false)
+  code                                                                               Int?                      @unique(map: "UNIQ_715AA19C77153098")
+  products                                                                           String?                   @db.LongText
+  impact_input_bscs                                                                  Boolean                   @default(false)
+  impact_loading                                                                     Boolean                   @default(false)
+  inputImpacted                                                                      Int?
+  hideInput                                                                          Boolean                   @default(false)
+  used                                                                               Boolean                   @default(false)
+  impact_commissionnement                                                            Boolean?                  @default(false)
+  remonter                                                                           Boolean
+  anomalie_contradictorys_anomalie_contradictorys_contradictory_with_me_idToanomalie anomalie_contradictorys[] @relation("anomalie_contradictorys_contradictory_with_me_idToanomalie")
+  anomalie_contradictorys_anomalie_contradictorys_contradictorys_idToanomalie        anomalie_contradictorys[] @relation("anomalie_contradictorys_contradictorys_idToanomalie")
+}
+
+model anomalie_contradictorys {
+  contradictory_with_me_id                                            Int
+  contradictorys_id                                                   Int
+  anomalie_anomalie_contradictorys_contradictory_with_me_idToanomalie anomalie @relation("anomalie_contradictorys_contradictory_with_me_idToanomalie", fields: [contradictory_with_me_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_398FD6BA1586215E")
+  anomalie_anomalie_contradictorys_contradictorys_idToanomalie        anomalie @relation("anomalie_contradictorys_contradictorys_idToanomalie", fields: [contradictorys_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_398FD6BAC4BD76C9")
+
+  @@id([contradictory_with_me_id, contradictorys_id])
+  @@index([contradictory_with_me_id], map: "IDX_398FD6BA1586215E")
+  @@index([contradictorys_id], map: "IDX_398FD6BAC4BD76C9")
+}
+
+model blacklist {
+  id         Int       @id @default(autoincrement())
+  cin        String?   @unique(map: "UNIQ_3B175385ABE530DA") @db.VarChar(10)
+  reason     String?   @db.VarChar(255)
+  date       DateTime? @db.DateTime(0)
+  last_name  String?   @db.VarChar(255)
+  first_name String?   @db.VarChar(255)
+}
+
+model bon_livraison {
+  id                       Int       @id @default(autoincrement())
+  distributeur_id          Int?
+  owner_id                 Int?
+  created_by_id            Int?
+  updated_by_id            Int?
+  ref_bl                   String?   @db.VarChar(20)
+  ref_bl_distributeur      String?   @db.VarChar(100)
+  status                   Int?      @db.SmallInt
+  nb_contract              Int?      @default(0)
+  raised_at                DateTime? @db.DateTime(0)
+  created_at               DateTime  @db.DateTime(0)
+  updated_at               DateTime? @db.DateTime(0)
+  siteCna_id               Int?
+  franchise_id             Int?
+  last_contract            Int?
+  charged_by_id            Int?
+  validated_by_id          Int?
+  is_pos                   Boolean   @default(true)
+  produit                  String    @db.VarChar(100)
+  offre_id                 Int?
+  contract_debut           BigInt?
+  contract_fin             BigInt?
+  contract_loaded          Int?      @default(0)
+  nb_contract_distributeur Int?      @default(0)
+  validated_at             DateTime? @db.DateTime(0)
+  isDigitalised            Boolean?  @default(false)
+  withAnomalie             Boolean?  @default(false)
+  istransfert              Boolean?  @default(false)
+  siteCnaMere_id           Int?
+  ref_bar_code             BigInt?
+  isopened                 Boolean?  @default(false)
+  affectedAt               DateTime? @db.DateTime(0)
+  transferred_at           DateTime? @db.DateTime(0)
+  nbContractLoaded         Int?      @default(0)
+  charged_by_copie_id      Int?
+  validated_by_copie_id    Int?
+  siteCnaCopie_id          Int?
+  status_changed_by        Int?
+  status_changed_at        DateTime? @db.DateTime(0)
+  nbContractAccepted       Int?      @default(0)
+  received_at              DateTime? @db.DateTime(0)
+  receivedBy_id            Int?
+  nb_contract_saisie       Int?      @default(0)
+  nbContractWithAnomalie   Int?      @default(0)
+  nb_contract_activated    Int?      @default(0)
+
+  @@index([status_changed_by], map: "IDX_31A531A411EF8919")
+  @@index([distributeur_id], map: "IDX_31A531A429EB7ACA")
+  @@index([siteCnaCopie_id], map: "IDX_31A531A4334DEA77")
+  @@index([siteCna_id], map: "IDX_31A531A44AF4A090")
+  @@index([offre_id], map: "IDX_31A531A44CC8505A")
+  @@index([franchise_id], map: "IDX_31A531A4523CAB89")
+  @@index([validated_by_copie_id], map: "IDX_31A531A45448FB6A")
+  @@index([siteCnaMere_id], map: "IDX_31A531A45E7EDB42")
+  @@index([owner_id], map: "IDX_31A531A47E3C61F9")
+  @@index([updated_by_id], map: "IDX_31A531A4896DBBDE")
+  @@index([charged_by_copie_id], map: "IDX_31A531A49944F02F")
+  @@index([created_by_id], map: "IDX_31A531A4B03A8386")
+  @@index([charged_by_id], map: "IDX_31A531A4BF18B1C6")
+  @@index([validated_by_id], map: "IDX_31A531A4C69DE5E5")
+  @@index([receivedBy_id], map: "IDX_31A531A4E6C5D2A3")
+  @@index([raised_at], map: "IDX_bl_raised_at")
+  @@index([ref_bl], map: "IDX_ref_bl")
+}
+
+model bon_livraison_audit {
+  id                       Int
+  rev                      Int
+  distributeur_id          Int?
+  owner_id                 Int?
+  created_by_id            Int?
+  updated_by_id            Int?
+  ref_bl                   String?   @db.VarChar(20)
+  ref_bl_distributeur      String?   @db.VarChar(100)
+  status                   Int?      @db.SmallInt
+  nb_contract              Int?      @default(0)
+  raised_at                DateTime? @db.DateTime(0)
+  created_at               DateTime? @db.DateTime(0)
+  updated_at               DateTime? @db.DateTime(0)
+  siteCna_id               Int?
+  revtype                  String    @db.VarChar(4)
+  franchise_id             Int?
+  last_contract            Int?
+  charged_by_id            Int?
+  validated_by_id          Int?
+  is_pos                   Boolean?  @default(true)
+  produit                  String?   @db.VarChar(100)
+  offre_id                 Int?
+  contract_debut           BigInt?
+  contract_fin             BigInt?
+  contract_loaded          Int?      @default(0)
+  nb_contract_distributeur Int?      @default(0)
+  validated_at             DateTime? @db.DateTime(0)
+  isDigitalised            Boolean?  @default(false)
+  withAnomalie             Boolean?  @default(false)
+  istransfert              Boolean?  @default(false)
+  siteCnaMere_id           Int?
+  ref_bar_code             BigInt?
+  isopened                 Boolean?  @default(false)
+  affectedAt               DateTime? @db.DateTime(0)
+  transferred_at           DateTime? @db.DateTime(0)
+  nbContractLoaded         Int?      @default(0)
+  charged_by_copie_id      Int?
+  validated_by_copie_id    Int?
+  siteCnaCopie_id          Int?
+  status_changed_by        Int?
+  status_changed_at        DateTime? @db.DateTime(0)
+  nbContractAccepted       Int?      @default(0)
+  received_at              DateTime? @db.DateTime(0)
+  receivedBy_id            Int?
+  nb_contract_saisie       Int?      @default(0)
+  nbContractWithAnomalie   Int?      @default(0)
+  nb_contract_activated    Int?      @default(0)
+
+  @@id([id, rev])
+  @@index([status_changed_by], map: "FK_31A531A411EF8919_audit")
+  @@index([distributeur_id], map: "FK_31A531A429EB7ACA_audit")
+  @@index([siteCnaCopie_id], map: "FK_31A531A4334DEA77_audit")
+  @@index([siteCna_id], map: "FK_31A531A44AF4A090_audit")
+  @@index([offre_id], map: "FK_31A531A44CC8505A_audit")
+  @@index([franchise_id], map: "FK_31A531A4523CAB89_audit")
+  @@index([validated_by_copie_id], map: "FK_31A531A45448FB6A_audit")
+  @@index([siteCnaMere_id], map: "FK_31A531A45E7EDB42_audit")
+  @@index([owner_id], map: "FK_31A531A47E3C61F9_audit")
+  @@index([updated_by_id], map: "FK_31A531A4896DBBDE_audit")
+  @@index([charged_by_copie_id], map: "FK_31A531A49944F02F_audit")
+  @@index([created_by_id], map: "FK_31A531A4B03A8386_audit")
+  @@index([charged_by_id], map: "FK_31A531A4BF18B1C6_audit")
+  @@index([validated_by_id], map: "FK_31A531A4C69DE5E5_audit")
+  @@index([receivedBy_id], map: "FK_31A531A4E6C5D2A3_audit")
+  @@index([rev], map: "rev_ae5d45b08c5df154f9fdd9a53ceb2724_idx")
+}
+
+model bordereau {
+  id              Int       @id @default(autoincrement())
+  distributeur_id Int?
+  created_by      Int?
+  closed_by       Int?
+  site_cna_id     Int?
+  ref_bordereau   String    @db.VarChar(255)
+  ref_bar_code    BigInt?
+  nb_contracts    Int
+  status          Int
+  created_at      DateTime  @db.DateTime(0)
+  closed_at       DateTime? @db.DateTime(0)
+
+  @@index([distributeur_id], map: "IDX_F7B4C56129EB7ACA")
+  @@index([site_cna_id], map: "IDX_F7B4C56173943760")
+  @@index([closed_by], map: "IDX_F7B4C56188F6E01")
+  @@index([created_by], map: "IDX_F7B4C561DE12AB56")
+}
+
+model bordereau_audit {
+  id              Int
+  rev             Int
+  distributeur_id Int?
+  created_by      Int?
+  closed_by       Int?
+  site_cna_id     Int?
+  ref_bordereau   String?   @db.VarChar(255)
+  ref_bar_code    BigInt?
+  nb_contracts    Int?
+  status          Int?
+  created_at      DateTime? @db.DateTime(0)
+  closed_at       DateTime? @db.DateTime(0)
+  revtype         String    @db.VarChar(4)
+
+  @@id([id, rev])
+  @@index([distributeur_id], map: "FK_F7B4C56129EB7ACA_audit")
+  @@index([site_cna_id], map: "FK_F7B4C56173943760_audit")
+  @@index([closed_by], map: "FK_F7B4C56188F6E01_audit")
+  @@index([created_by], map: "FK_F7B4C561DE12AB56_audit")
+  @@index([rev], map: "rev_4f210964d618a5ce87333bf4913f0b49_idx")
+}
+
+model brand {
+  id         Int     @id @default(autoincrement())
+  name       String  @unique(map: "UNIQ_1C52F9585E237E06") @db.VarChar(255)
+  message    String? @db.LongText
+  range_from BigInt?
+  range_to   BigInt?
+}
+
+model brand_dsa {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique(map: "UNIQ_7DD496EE5E237E06") @db.VarChar(255)
+  codeBrand  String   @unique(map: "UNIQ_7DD496EEB65DCC86") @db.VarChar(255)
+  nbprefixs  Int
+  updated_at DateTime @db.DateTime(0)
+  status     Boolean
+}
+
+model brand_dsa_audit {
+  id         Int
+  rev        Int
+  name       String?   @db.VarChar(255)
+  nbprefixs  Int?
+  updated_at DateTime? @db.DateTime(0)
+  codeBrand  String?   @db.VarChar(255)
+  revtype    String    @db.VarChar(4)
+  status     Boolean?
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_f959425d1d29e876e28782af2f33a143_idx")
+}
+
+model campagne {
+  id            Int             @id @default(autoincrement())
+  owner_id      Int?
+  titre         String          @db.VarChar(255)
+  date_from     DateTime        @db.DateTime(0)
+  date_to       DateTime        @db.DateTime(0)
+  message       String?         @db.LongText
+  montant       Float?
+  comptbonus    Int?
+  pwdbonus      String?         @db.VarChar(255)
+  enabled       Boolean?
+  created_at    DateTime?       @db.DateTime(0)
+  updated_at    DateTime?       @db.DateTime(0)
+  fos_user      fos_user?       @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_539B5D167E3C61F9")
+  campagne_user campagne_user[]
+
+  @@index([owner_id], map: "IDX_539B5D167E3C61F9")
+  @@index([date_from], map: "IDX_date_from")
+  @@index([date_to], map: "IDX_date_to")
+  @@index([enabled], map: "IDX_enabled")
+}
+
+model campagne_user {
+  campagne_id Int
+  user_id     Int
+  campagne    campagne @relation(fields: [campagne_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_66A14A8916227374")
+  fos_user    fos_user @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_66A14A89A76ED395")
+
+  @@id([campagne_id, user_id])
+  @@index([campagne_id], map: "IDX_66A14A8916227374")
+  @@index([user_id], map: "IDX_66A14A89A76ED395")
+}
+
+model check_bon_livraison {
+  id    Int @id @default(autoincrement())
+  id_bl Int
+}
+
+model check_contract {
+  id          Int @id @default(autoincrement())
+  id_contract Int
+}
+
+model check_update_bscs {
+  id          Int @id @default(autoincrement())
+  id_contract Int @unique(map: "unique_id_contract")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model configbonlivraison {
+  id        Int       @id @default(autoincrement())
+  products  String    @db.LongText
+  createdAt DateTime  @db.DateTime(0)
+  updatedAt DateTime? @db.DateTime(0)
+}
+
+model configbscs {
+  id       Int      @id @default(autoincrement())
+  dateFrom DateTime @db.DateTime(0)
+  dateFin  DateTime @db.DateTime(0)
+}
+
+model configbscs_audit {
+  id       Int
+  rev      Int
+  dateFrom DateTime? @db.DateTime(0)
+  dateFin  DateTime? @db.DateTime(0)
+  revtype  String    @db.VarChar(4)
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_3b12411018b68df4030de1537bfd7d9e_idx")
+}
+
+model contract_archive {
+  id                Int       @id @default(autoincrement())
+  sim               String?   @db.VarChar(50)
+  imei              String?   @db.VarChar(50)
+  num_appel         String?   @db.VarChar(50)
+  num_autorisation  String?   @db.VarChar(50)
+  num_order         Int?
+  ref_bon_livraison String?   @db.VarChar(50)
+  site              String?   @db.VarChar(50)
+  remonted_at       DateTime? @db.DateTime(0)
+  offre             String?   @db.VarChar(255)
+  produit           String?   @db.VarChar(255)
+
+  @@index([imei], map: "IDX_Archive_imei")
+  @@index([num_autorisation], map: "IDX_Archive_numAutorisation")
+  @@index([num_appel], map: "IDX_Archive_numFixe")
+  @@index([remonted_at], map: "IDX_Archive_remontedAt")
+  @@index([sim], map: "IDX_Archive_sim")
+}
+
+model contrat_drc {
+  id                         BigInt  @id @default(autoincrement())
+  DATE_SIM_SWAP              String? @db.VarChar(50)
+  heure_operation            String? @db.VarChar(50)
+  NUMERO_SERIE_SIM_NORMALISE String? @db.VarChar(500)
+  NUMERO_APPEL               String? @db.VarChar(50)
+  CIN_RC_PASS                String? @db.VarChar(500)
+}
+
+model cx_history {
+  id            Int      @id @default(autoincrement())
+  sim           BigInt?
+  action_at     DateTime @db.DateTime(0)
+  user_bscs     String?  @db.VarChar(255)
+  sim_pack_id   BigInt?
+  msisdn_id     Int?
+  user_id       Int?
+  campagne_id   Int?
+  brand_id      Int?
+  brand_dsa_id  Int?
+  offre_dsa_id  Int?
+  isDigitalised Boolean? @default(false)
+  action        Int      @db.SmallInt
+  extra_info    String?  @db.LongText
+  channel       String?  @db.VarChar(255)
+  piece_identif String?  @db.VarChar(9)
+  cin_pp        String?  @db.VarChar(50)
+  pays          String?  @db.VarChar(100)
+  isDsa         Boolean? @default(false)
+  imsi          BigInt?
+
+  @@index([campagne_id], map: "IDX_A4F1F89716227374")
+  @@index([brand_id], map: "IDX_A4F1F89744F5D008")
+  @@index([brand_dsa_id], map: "IDX_A4F1F8975C786BA")
+  @@index([sim_pack_id], map: "IDX_A4F1F89784EA4054")
+  @@index([user_id], map: "IDX_A4F1F897A76ED395")
+  @@index([msisdn_id], map: "IDX_A4F1F897D429DFE8")
+  @@index([offre_dsa_id], map: "IDX_A4F1F897E1C59A9F")
+}
+
+model cx_msisdn {
+  id             Int     @id @default(autoincrement())
+  msisdn         BigInt?
+  msisdn_virtual BigInt?
+}
+
+model delegation {
+  id             Int        @id @default(autoincrement())
+  gouvernorat_id Int?
+  label          String     @db.VarChar(255)
+  fos_user       fos_user[]
+
+  @@index([gouvernorat_id], map: "IDX_292F436D75B74E2D")
+}
+
+model digital_config {
+  id                                    Int     @id @default(autoincrement())
+  limit_remonte_contract                Int     @default(2)
+  ocr_via                               Boolean @default(false)
+  limit_prevalide_contract              Int     @default(5)
+  limit_non_prevalide_contract          Int     @default(5)
+  max_nb_contract_offline_non_remonte   Int     @default(500)
+  max_delai_remonte_contract_offline    Int     @default(17)
+  seuil_nb_contract_offline_non_remonte Int     @default(100)
+  seuil_delai_remonte_contract_offline  Int     @default(1)
+}
+
+model digital_config_audit {
+  id                                    Int
+  rev                                   Int
+  limit_remonte_contract                Int?     @default(2)
+  revtype                               String   @db.VarChar(4)
+  ocr_via                               Boolean? @default(false)
+  limit_prevalide_contract              Int?     @default(5)
+  limit_non_prevalide_contract          Int?     @default(5)
+  max_nb_contract_offline_non_remonte   Int?     @default(500)
+  max_delai_remonte_contract_offline    Int?     @default(17)
+  seuil_nb_contract_offline_non_remonte Int?     @default(100)
+  seuil_delai_remonte_contract_offline  Int?     @default(1)
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_ffb6428dd51c15911cb79d8eecf59ad1_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_contract {
+  id                      Int        @id @default(autoincrement())
+  ref_bon_livraison_id    Int?
+  created_by              Int?
+  pos_id                  Int?
+  dispenser_id            Int?
+  piece_identif           Int?       @db.SmallInt
+  cin_pp                  String?    @db.VarChar(50)
+  cin_recto               String?    @db.VarChar(255)
+  cin_verso               String?    @db.VarChar(255)
+  passeport               String?    @db.VarChar(255)
+  residence               String?    @db.VarChar(255)
+  contract                String?    @db.VarChar(255)
+  lastname                String?    @db.VarChar(100)
+  first_name              String?    @db.VarChar(100)
+  address                 String?    @db.VarChar(50)
+  birthdate               DateTime?  @db.DateTime(0)
+  place_birth             String?    @db.VarChar(100)
+  status                  Int?       @default(0) @db.SmallInt
+  created_at              DateTime   @db.DateTime(0)
+  updated_at              DateTime?  @db.DateTime(0)
+  msisdn                  Int?
+  channel                 String?    @db.VarChar(10)
+  activated_at            DateTime?  @db.DateTime(0)
+  discr                   String     @db.VarChar(18)
+  sim                     BigInt?
+  imei                    BigInt?
+  accpeted                Int?       @db.SmallInt
+  pays                    String?    @db.VarChar(50)
+  num_contract            Int?       @db.SmallInt
+  num_fixe                Int?
+  num_autorisation        String?    @db.VarChar(50)
+  dirnum                  Int?
+  piece_identif_act       Int?       @db.SmallInt
+  cin_pp_act              String?    @db.VarChar(50)
+  isConforme              Boolean?   @default(false)
+  isDigitalised           Boolean?   @default(false)
+  isAutomaticValidated    Boolean?   @default(false)
+  dateLimitePrevalidation DateTime?  @db.DateTime(0)
+  datePrevalidation       DateTime?  @db.DateTime(0)
+  dateAffectation         DateTime?  @db.DateTime(0)
+  verified                Boolean?   @default(true)
+  pi_saisie               String?    @db.VarChar(250)
+  date_saisie             DateTime?  @db.DateTime(0)
+  anomalys                String?    @db.LongText
+  gouvernorat_id          Int?
+  localite_id             Int?
+  langue                  String?    @db.VarChar(50)
+  titre                   String?    @db.VarChar(50)
+  rue                     String?    @db.VarChar(100)
+  num_rue                 Int?
+  nationalite             String?    @db.VarChar(50)
+  situation               String?    @db.VarChar(50)
+  sexe                    String?    @db.VarChar(10)
+  type_pi_saisie          Int?
+  impactPieceIdentif      Boolean?   @default(false)
+  impactCin_pp            Boolean?   @default(false)
+  impactNumFixe           Boolean?   @default(false)
+  numAppel                Int?
+  impactSim               Boolean?   @default(false)
+  impactImei              Boolean?   @default(false)
+  impactNumAutorisation   Boolean?   @default(false)
+  remonted_at             DateTime?  @db.DateTime(0)
+  dateLimiteRemontee      DateTime?  @db.DateTime(0)
+  isConformeRemonted      Boolean?   @default(false)
+  operation_id            Int?
+  nb_anomalie             Int?       @default(0)
+  agentSaisie             String?    @db.VarChar(50)
+  dispenserAct            String?    @db.VarChar(100)
+  passeportVerso          String?    @db.VarChar(255)
+  contractVerso           String?    @db.VarChar(255)
+  markedAnomaly           String?    @db.LongText
+  piReconnu               Boolean?   @default(false)
+  town_id                 Int?
+  houseNo                 Int?
+  cityOrBuilding          String?    @db.VarChar(100)
+  floorNo                 Int?
+  emailAddr               String?    @db.VarChar(100)
+  telNo1                  String?    @db.VarChar(13)
+  countryPasseport        String?    @default("TN") @db.VarChar(100)
+  nationalityPasseport    String?    @db.VarChar(255)
+  numSimInfo              BigInt?
+  updated_by              Int?
+  status_changed_by       Int?
+  loaded_by               Int?
+  accepted_by             Int?
+  status_changed_at       DateTime?  @db.DateTime(0)
+  loaded_at               DateTime?  @db.DateTime(0)
+  accepted_at             DateTime?  @db.DateTime(0)
+  ref_bordereau_id        Int?
+  saisie_by               Int?
+  status_contract         String?    @db.VarChar(20)
+  path                    String?    @db.VarChar(50)
+  upload_dir              String?    @db.VarChar(255)
+  date_retour             DateTime?  @db.DateTime(0)
+  tentative_bscs          Int        @default(0)
+  message_bscs            String?    @db.VarChar(255)
+  tentative_ocr           Int?
+  message_ocr             String?    @db.Text
+  info_bscs               info_bscs?
+
+  @@unique([num_contract, ref_bon_livraison_id], map: "UNIQ_97A439C309C719FE97310B")
+  @@index([status_changed_by], map: "IDX_97A439C11EF8919")
+  @@index([updated_by], map: "IDX_97A439C16FE72E1")
+  @@index([loaded_by], map: "IDX_97A439C1755EF4D")
+  @@index([saisie_by], map: "IDX_97A439C21D686FF")
+  @@index([pos_id], map: "IDX_97A439C41085FAE")
+  @@index([dispenser_id], map: "IDX_97A439C5115AEEB")
+  @@index([gouvernorat_id], map: "IDX_97A439C75B74E2D")
+  @@index([town_id], map: "IDX_97A439C75E23604")
+  @@index([localite_id], map: "IDX_97A439C924DD2B5")
+  @@index([ref_bordereau_id], map: "IDX_97A439CB121F6BD")
+  @@index([accepted_by], map: "IDX_97A439CBD57FA7C")
+  @@index([created_by], map: "IDX_97A439CDE12AB56")
+  @@index([ref_bon_livraison_id], map: "IDX_97A439CE97310B")
+  @@index([dateLimiteRemontee], map: "IDX_dateLimiteRemontee")
+  @@index([datePrevalidation], map: "IDX_datePrevalidation")
+  @@index([discr], map: "IDX_discr")
+  @@index([id, discr], map: "IDX_id_discr")
+  @@index([imei], map: "IDX_imei")
+  @@index([isAutomaticValidated], map: "IDX_isAutomaticValidated")
+  @@index([isDigitalised], map: "IDX_isDigitalised")
+  @@index([num_autorisation], map: "IDX_numAutorisation")
+  @@index([num_fixe], map: "IDX_numFixe")
+  @@index([operation_id, discr], map: "IDX_operation_id_sim")
+  @@index([remonted_at], map: "IDX_remontedAt")
+  @@index([sim], map: "IDX_sim")
+  @@index([status, isDigitalised, discr], map: "IDX_status_id_discr")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_contract_audit {
+  id                      Int
+  rev                     Int
+  ref_bon_livraison_id    Int?
+  created_by              Int?
+  pos_id                  Int?
+  dispenser_id            Int?
+  piece_identif           Int?      @db.SmallInt
+  cin_pp                  String?   @db.VarChar(50)
+  cin_recto               String?   @db.VarChar(255)
+  cin_verso               String?   @db.VarChar(255)
+  passeport               String?   @db.VarChar(255)
+  residence               String?   @db.VarChar(255)
+  contract                String?   @db.VarChar(255)
+  lastname                String?   @db.VarChar(100)
+  first_name              String?   @db.VarChar(100)
+  address                 String?   @db.VarChar(50)
+  birthdate               DateTime? @db.DateTime(0)
+  place_birth             String?   @db.VarChar(100)
+  status                  Int?      @default(0) @db.SmallInt
+  created_at              DateTime? @db.DateTime(0)
+  updated_at              DateTime? @db.DateTime(0)
+  msisdn                  Int?
+  channel                 String?   @db.VarChar(10)
+  activated_at            DateTime? @db.DateTime(0)
+  discr                   String?   @db.VarChar(18)
+  sim                     BigInt?
+  imei                    BigInt?
+  revtype                 String    @db.VarChar(4)
+  accpeted                Int?      @db.SmallInt
+  pays                    String?   @db.VarChar(50)
+  num_contract            Int?      @db.SmallInt
+  num_fixe                Int?
+  num_autorisation        String?   @db.VarChar(50)
+  dirnum                  Int?
+  piece_identif_act       Int?      @db.SmallInt
+  cin_pp_act              String?   @db.VarChar(50)
+  isConforme              Boolean?  @default(false)
+  isDigitalised           Boolean?  @default(false)
+  isAutomaticValidated    Boolean?  @default(false)
+  dateLimitePrevalidation DateTime? @db.DateTime(0)
+  datePrevalidation       DateTime? @db.DateTime(0)
+  dateAffectation         DateTime? @db.DateTime(0)
+  verified                Boolean?  @default(true)
+  pi_saisie               String?   @db.VarChar(250)
+  date_saisie             DateTime? @db.DateTime(0)
+  anomalys                String?   @db.LongText
+  gouvernorat_id          Int?
+  localite_id             Int?
+  langue                  String?   @db.VarChar(50)
+  titre                   String?   @db.VarChar(50)
+  rue                     String?   @db.VarChar(100)
+  num_rue                 Int?
+  nationalite             String?   @db.VarChar(50)
+  situation               String?   @db.VarChar(50)
+  sexe                    String?   @db.VarChar(10)
+  type_pi_saisie          Int?
+  impactPieceIdentif      Boolean?  @default(false)
+  impactCin_pp            Boolean?  @default(false)
+  impactNumFixe           Boolean?  @default(false)
+  numAppel                Int?
+  impactSim               Boolean?  @default(false)
+  impactImei              Boolean?  @default(false)
+  impactNumAutorisation   Boolean?  @default(false)
+  remonted_at             DateTime? @db.DateTime(0)
+  dateLimiteRemontee      DateTime? @db.DateTime(0)
+  isConformeRemonted      Boolean?  @default(false)
+  operation_id            Int?
+  nb_anomalie             Int?      @default(0)
+  agentSaisie             String?   @db.VarChar(50)
+  dispenserAct            String?   @db.VarChar(100)
+  passeportVerso          String?   @db.VarChar(255)
+  contractVerso           String?   @db.VarChar(255)
+  markedAnomaly           String?   @db.LongText
+  piReconnu               Boolean?  @default(false)
+  town_id                 Int?
+  houseNo                 Int?
+  cityOrBuilding          String?   @db.VarChar(100)
+  floorNo                 Int?
+  emailAddr               String?   @db.VarChar(100)
+  telNo1                  String?   @db.VarChar(13)
+  countryPasseport        String?   @default("TN") @db.VarChar(100)
+  nationalityPasseport    String?   @db.VarChar(255)
+  numSimInfo              BigInt?
+  updated_by              Int?
+  status_changed_by       Int?
+  loaded_by               Int?
+  accepted_by             Int?
+  status_changed_at       DateTime? @db.DateTime(0)
+  loaded_at               DateTime? @db.DateTime(0)
+  accepted_at             DateTime? @db.DateTime(0)
+  ref_bordereau_id        Int?
+  saisie_by               Int?
+  status_contract         String?   @db.VarChar(20)
+  path                    String?   @db.VarChar(50)
+  upload_dir              String?   @db.VarChar(255)
+  date_retour             DateTime? @db.DateTime(0)
+  tentative_bscs          Int?      @default(0)
+  message_bscs            String?   @db.VarChar(255)
+
+  @@id([id, rev])
+  @@index([status_changed_by], map: "FK_97A439C11EF8919_audit")
+  @@index([updated_by], map: "FK_97A439C16FE72E1_audit")
+  @@index([loaded_by], map: "FK_97A439C1755EF4D_audit")
+  @@index([saisie_by], map: "FK_97A439C21D686FF_audit")
+  @@index([pos_id], map: "FK_97A439C41085FAE_audit")
+  @@index([dispenser_id], map: "FK_97A439C5115AEEB_audit")
+  @@index([gouvernorat_id], map: "FK_97A439C75B74E2D_audit")
+  @@index([town_id], map: "FK_97A439C75E23604_audit")
+  @@index([localite_id], map: "FK_97A439C924DD2B5_audit")
+  @@index([ref_bordereau_id], map: "FK_97A439CB121F6BD_audit")
+  @@index([accepted_by], map: "FK_97A439CBD57FA7C_audit")
+  @@index([created_by], map: "FK_97A439CDE12AB56_audit")
+  @@index([ref_bon_livraison_id], map: "FK_97A439CE97310B_audit")
+  @@index([rev], map: "rev_760792d2504eb9f85750f24876e93e93_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_stat_day {
+  id                          Int       @id @default(autoincrement())
+  date                        DateTime? @db.DateTime(0)
+  user_id                     Int
+  user                        String    @db.LongText
+  children                    String?   @db.LongText
+  created_at                  DateTime  @db.DateTime(0)
+  updated_at                  DateTime? @db.DateTime(0)
+  nbTotalContract             Int       @default(0)
+  nbOperationActivation       Int       @default(0)
+  nbTotalContractPrevalidated Int       @default(0)
+  nbContractAutoPrevalidated  Int       @default(0)
+  totalDurationPrevalidation  Int       @default(0)
+  nbContractCompliance        Int       @default(0)
+  totalDurationRemonte        Int       @default(0)
+  nbTotalContractRemonte      Int       @default(0)
+  groupeType                  Int?
+
+  @@index([date], map: "IDX_date")
+  @@index([user_id], map: "IDX_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_stat_hour {
+  id                          Int       @id @default(autoincrement())
+  date                        DateTime? @db.DateTime(0)
+  user_id                     Int
+  nbOperationActivation       Int       @default(0)
+  nbContractAutoPrevalidated  Int       @default(0)
+  totalDurationRemonte        Int       @default(0)
+  totalDurationPrevalidation  Int       @default(0)
+  user                        String    @db.LongText
+  children                    String?   @db.LongText
+  created_at                  DateTime  @db.DateTime(0)
+  updated_at                  DateTime? @db.DateTime(0)
+  nbTotalContract             Int       @default(0)
+  nbTotalContractPrevalidated Int       @default(0)
+  nbContractCompliance        Int       @default(0)
+  nbTotalContractRemonte      Int       @default(0)
+  groupeType                  Int?
+
+  @@index([date], map: "IDX_date")
+  @@index([user_id], map: "IDX_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_stat_month {
+  id                          Int       @id @default(autoincrement())
+  date                        DateTime? @db.DateTime(0)
+  user_id                     Int
+  user                        String    @db.LongText
+  children                    String?   @db.LongText
+  created_at                  DateTime  @db.DateTime(0)
+  updated_at                  DateTime? @db.DateTime(0)
+  nbTotalContract             Int       @default(0)
+  nbOperationActivation       Int       @default(0)
+  nbTotalContractPrevalidated Int       @default(0)
+  nbContractAutoPrevalidated  Int       @default(0)
+  totalDurationPrevalidation  Int       @default(0)
+  nbContractCompliance        Int       @default(0)
+  totalDurationRemonte        Int       @default(0)
+  nbTotalContractRemonte      Int       @default(0)
+  groupeType                  Int?
+
+  @@index([date], map: "IDX_date")
+  @@index([user_id], map: "IDX_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_stat_week {
+  id                          Int       @id @default(autoincrement())
+  date                        DateTime? @db.DateTime(0)
+  user_id                     Int
+  user                        String    @db.LongText
+  children                    String?   @db.LongText
+  created_at                  DateTime  @db.DateTime(0)
+  updated_at                  DateTime? @db.DateTime(0)
+  nbTotalContract             Int       @default(0)
+  nbOperationActivation       Int       @default(0)
+  nbTotalContractPrevalidated Int       @default(0)
+  nbContractAutoPrevalidated  Int       @default(0)
+  totalDurationPrevalidation  Int       @default(0)
+  nbContractCompliance        Int       @default(0)
+  totalDurationRemonte        Int       @default(0)
+  nbTotalContractRemonte      Int       @default(0)
+  groupeType                  Int?
+
+  @@index([date], map: "IDX_date")
+  @@index([user_id], map: "IDX_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model digital_stat_year {
+  id                          Int       @id @default(autoincrement())
+  date                        DateTime? @db.DateTime(0)
+  user_id                     Int
+  user                        String    @db.LongText
+  children                    String?   @db.LongText
+  created_at                  DateTime  @db.DateTime(0)
+  updated_at                  DateTime? @db.DateTime(0)
+  nbTotalContract             Int       @default(0)
+  nbOperationActivation       Int       @default(0)
+  nbTotalContractPrevalidated Int       @default(0)
+  nbContractAutoPrevalidated  Int       @default(0)
+  totalDurationPrevalidation  Int       @default(0)
+  nbContractCompliance        Int       @default(0)
+  totalDurationRemonte        Int       @default(0)
+  nbTotalContractRemonte      Int       @default(0)
+  groupeType                  Int?
+
+  @@index([date], map: "IDX_date")
+  @@index([user_id], map: "IDX_user_id")
+}
+
+model digitalcontrat_anomalie {
+  digitalcontract_id Int
+  anomalie_id        Int
+
+  @@id([digitalcontract_id, anomalie_id])
+  @@index([digitalcontract_id], map: "IDX_1FF38D8A2AD06BAB")
+  @@index([anomalie_id], map: "IDX_1FF38D8AAEEAB197")
+}
+
+model digitalstatday {
+  date                        DateTime @db.DateTime(0)
+  userId                      Int
+  nbTotalContract             Int?     @default(0)
+  nbOperationActivation       Int?     @default(0)
+  nbTotalContractPrevalidated Int?     @default(0)
+  nbContractAutoPrevalidated  Int?     @default(0)
+  totalDurationPrevalidation  Int?     @default(0)
+  nbContractCompliance        Int?     @default(0)
+  totalDurationRemonte        Int?     @default(0)
+  nbTotalContractRemonte      Int?     @default(0)
+  createdAt                   DateTime @db.DateTime(0)
+  updatedAt                   DateTime @db.DateTime(0)
+
+  @@id([date, userId])
+}
+
+model digitalstathour {
+  date                        DateTime @db.DateTime(0)
+  userId                      Int
+  nbTotalContract             Int?     @default(0)
+  nbOperationActivation       Int?     @default(0)
+  nbTotalContractPrevalidated Int?     @default(0)
+  nbContractAutoPrevalidated  Int?     @default(0)
+  totalDurationPrevalidation  Int?     @default(0)
+  nbContractCompliance        Int?     @default(0)
+  totalDurationRemonte        Int?     @default(0)
+  nbTotalContractRemonte      Int?     @default(0)
+  createdAt                   DateTime @db.DateTime(0)
+  updatedAt                   DateTime @db.DateTime(0)
+
+  @@id([date, userId])
+}
+
+model digitalstatmonth {
+  date                        DateTime @db.DateTime(0)
+  userId                      Int
+  nbTotalContract             Int?     @default(0)
+  nbOperationActivation       Int?     @default(0)
+  nbTotalContractPrevalidated Int?     @default(0)
+  nbContractAutoPrevalidated  Int?     @default(0)
+  totalDurationPrevalidation  Int?     @default(0)
+  nbContractCompliance        Int?     @default(0)
+  totalDurationRemonte        Int?     @default(0)
+  nbTotalContractRemonte      Int?     @default(0)
+  createdAt                   DateTime @db.DateTime(0)
+  updatedAt                   DateTime @db.DateTime(0)
+
+  @@id([date, userId])
+}
+
+model digitalstatweek {
+  date                        DateTime @db.DateTime(0)
+  userId                      Int
+  nbTotalContract             Int?     @default(0)
+  nbOperationActivation       Int?     @default(0)
+  nbTotalContractPrevalidated Int?     @default(0)
+  nbContractAutoPrevalidated  Int?     @default(0)
+  totalDurationPrevalidation  Int?     @default(0)
+  nbContractCompliance        Int?     @default(0)
+  totalDurationRemonte        Int?     @default(0)
+  nbTotalContractRemonte      Int?     @default(0)
+  createdAt                   DateTime @db.DateTime(0)
+  updatedAt                   DateTime @db.DateTime(0)
+
+  @@id([date, userId])
+}
+
+model digitalstatyear {
+  date                        DateTime @db.DateTime(0)
+  userId                      Int
+  nbTotalContract             Int?     @default(0)
+  nbOperationActivation       Int?     @default(0)
+  nbTotalContractPrevalidated Int?     @default(0)
+  nbContractAutoPrevalidated  Int?     @default(0)
+  totalDurationPrevalidation  Int?     @default(0)
+  nbContractCompliance        Int?     @default(0)
+  totalDurationRemonte        Int?     @default(0)
+  nbTotalContractRemonte      Int?     @default(0)
+  createdAt                   DateTime @db.DateTime(0)
+  updatedAt                   DateTime @db.DateTime(0)
+
+  @@id([date, userId])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model distributor_stock_history {
+  id                   Int      @id @default(autoincrement())
+  user_id              Int?
+  stock_history_global String   @db.LongText
+  stock_history_detail String   @db.LongText
+  created_at           DateTime @db.Date
+
+  @@index([user_id], map: "IDX_324D3095A76ED395")
+}
+
+model download {
+  id          Int       @id @default(autoincrement())
+  created_by  Int?
+  queue       String    @db.VarChar(255)
+  status      Int       @default(0) @db.SmallInt
+  from_url    String?   @db.VarChar(255)
+  file_path   String?   @db.VarChar(255)
+  name        String    @db.VarChar(255)
+  file_name   String?   @db.VarChar(255)
+  extension   String    @db.VarChar(10)
+  size        Int       @default(0)
+  nb_lines    Int       @default(0)
+  total_lines Int       @default(0)
+  short_url   String?   @db.VarChar(255)
+  nb_download Int       @default(0)
+  created_at  DateTime  @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  finished_at DateTime? @db.DateTime(0)
+
+  @@index([created_by], map: "IDX_816CE026DE12AB56")
+}
+
+model dsa_stock_seuil {
+  id               Int @id @default(autoincrement())
+  seuil_sim_dsa    Int @default(10)
+  seuil_msisdn_dsa Int @default(10)
+}
+
+model dsa_stock_seuil_audit {
+  id               Int
+  rev              Int
+  seuil_sim_dsa    Int?   @default(10)
+  seuil_msisdn_dsa Int?   @default(10)
+  revtype          String @db.VarChar(4)
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_4f6a1eb1ade70bb1cb37dacd253bcbd8_idx")
+}
+
+model echange_sims {
+  id        Int      @id @default(autoincrement())
+  user_from Int?
+  user_to   Int?
+  pack_id   BigInt?
+  qtte      Int
+  action    Int      @db.SmallInt
+  actionAt  DateTime @db.DateTime(0)
+
+  @@index([pack_id], map: "IDX_C5E3308D1919B217")
+  @@index([user_from], map: "IDX_C5E3308DC39BEDB9")
+  @@index([user_to], map: "IDX_C5E3308DCFD06601")
+}
+
+model echec_bscs_ema {
+  id                  Int      @id @default(autoincrement())
+  imported_at         DateTime @db.DateTime(0)
+  sim                 BigInt   @unique(map: "UNIQ_BAD2E7CB2ECAC210")
+  msisdn              Int?     @unique(map: "UNIQ_BAD2E7CBD8AB44")
+  service_class       String   @unique(map: "UNIQ_BAD2E7CB4439F478") @db.VarChar(255)
+  code_retour_bscs    Int?
+  message_retour_bscs String?  @db.VarChar(255)
+}
+
+model eligibility {
+  id                 Int @id @default(autoincrement())
+  maximum_number_sim Int
+  number_month       Int
+  status             Int @db.SmallInt
+}
+
+model eligibility_audit {
+  id                 Int
+  rev                Int
+  maximum_number_sim Int?
+  number_month       Int?
+  status             Int?   @db.SmallInt
+  revtype            String @db.VarChar(4)
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_37d01411080db344dd74bb8e6876dc0e_idx")
+}
+
+model external_stock_operation {
+  id            Int      @id @default(autoincrement())
+  CODE_ETT      String   @db.VarChar(10)
+  DES_ETT       String?  @db.VarChar(100)
+  CODE_PUBLITEL String?  @db.VarChar(10)
+  DES_PUBLITEL  String?  @db.VarChar(100)
+  DATE_OP       DateTime @db.DateTime(0)
+  NS_DEBUT      String   @db.VarChar(150)
+  NS_FIN        String   @db.VarChar(150)
+  QTE           Int
+  TYPE_OP       String   @db.VarChar(1)
+  MESSAGE       String?  @db.LongText
+  ETAT          Int      @default(0)
+
+  @@index([DATE_OP], map: "IDX_date_op")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model fos_group {
+  id                  Int                   @id @default(autoincrement())
+  type_id             Int?
+  name                String                @unique(map: "UNIQ_4B019DDB5E237E06") @db.VarChar(255)
+  roles               String                @db.LongText
+  parent_stocks       Int?
+  countuser           Int
+  customer_charge     Boolean?
+  type_cna            Int?                  @db.SmallInt
+  is_one_time_session Boolean               @default(false)
+  type_group          type_group?           @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4B019DDBC54C8C93")
+  fos_user_user_group fos_user_user_group[]
+
+  @@index([type_id], map: "IDX_4B019DDBC54C8C93")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model fos_user {
+  id                                                      Int                   @id @default(autoincrement())
+  parent_user_id                                          Int?
+  gouvernorat_id                                          Int?
+  delegation_id                                           Int?
+  code_postal_id                                          Int?
+  username                                                String                @unique(map: "UNIQ_957A6479F85E0677") @db.VarChar(20)
+  username_canonical                                      String                @unique(map: "UNIQ_957A647992FC23A8") @db.VarChar(20)
+  enabled                                                 Boolean
+  salt                                                    String                @db.VarChar(255)
+  password                                                String                @db.VarChar(255)
+  last_login                                              DateTime?             @db.DateTime(0)
+  locked                                                  Boolean
+  expired                                                 Boolean
+  expires_at                                              DateTime?             @db.DateTime(0)
+  confirmation_token                                      String?               @db.VarChar(255)
+  password_requested_at                                   DateTime?             @db.DateTime(0)
+  roles                                                   String                @db.LongText
+  credentials_expired                                     Boolean
+  credentials_expire_at                                   DateTime?             @db.DateTime(0)
+  allowreport                                             Boolean?
+  allow_mobile_sell                                       Int?
+  allow_webservice_sell                                   Int?
+  cin                                                     String?               @db.VarChar(10)
+  otp                                                     Boolean
+  email_responsable                                       String?               @db.LongText
+  fullname                                                String?               @db.VarChar(255)
+  oldpassword                                             String?               @db.VarChar(255)
+  phone                                                   Int?
+  prefix                                                  String?               @db.VarChar(1)
+  address                                                 String?               @db.LongText
+  email                                                   String?               @db.VarChar(255)
+  email_canonical                                         String?               @db.VarChar(255)
+  notification                                            String                @db.LongText
+  code_conventionnel                                      String?               @db.VarChar(255)
+  fax                                                     Int?
+  matricule_fiscal                                        String?               @db.VarChar(255)
+  userDistributor_id                                      Int?                  @unique(map: "UNIQ_957A6479A13CAFFE")
+  digitalised                                             Boolean?              @default(false)
+  activation_story                                        String?               @db.VarChar(255)
+  userDistributorBO_id                                    Int?
+  hierarchy                                               String?               @db.LongText
+  withChild                                               Boolean?              @default(false)
+  motif_desactivation                                     String?               @db.VarChar(255)
+  logged                                                  Boolean?
+  session_id                                              String?               @db.VarChar(255)
+  mapping_id                                              String?               @db.VarChar(20)
+  code_bo                                                 Int?
+  nb_contract_offline_nonRemonte                          Int?
+  delai_remonte_contract_offline                          Int?
+  max_nb_contract_offline_nonRemonte                      Int?
+  max_delai_remonte_contract_offline                      Int?
+  activation_cna_activation_cna_activated_byTofos_user    activation_cna[]      @relation("activation_cna_activated_byTofos_user")
+  activation_cna_activation_cna_distributeur_idTofos_user activation_cna[]      @relation("activation_cna_distributeur_idTofos_user")
+  campagne                                                campagne[]
+  campagne_user                                           campagne_user[]
+  fos_user_fos_user_userDistributorBO_idTofos_user        fos_user?             @relation("fos_user_userDistributorBO_idTofos_user", fields: [userDistributorBO_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A647946781D86")
+  other_fos_user_fos_user_userDistributorBO_idTofos_user  fos_user[]            @relation("fos_user_userDistributorBO_idTofos_user")
+  fos_user_fos_user_code_boTofos_user                     fos_user?             @relation("fos_user_code_boTofos_user", fields: [code_bo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A647953FCFE54")
+  other_fos_user_fos_user_code_boTofos_user               fos_user[]            @relation("fos_user_code_boTofos_user")
+  delegation                                              delegation?           @relation(fields: [delegation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A647956CBBCF5")
+  gouvernorat                                             gouvernorat?          @relation(fields: [gouvernorat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A647975B74E2D")
+  fos_user_fos_user_userDistributor_idTofos_user          fos_user?             @relation("fos_user_userDistributor_idTofos_user", fields: [userDistributor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A6479A13CAFFE")
+  other_fos_user_fos_user_userDistributor_idTofos_user    fos_user?             @relation("fos_user_userDistributor_idTofos_user")
+  localite                                                localite?             @relation(fields: [code_postal_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A6479B2B59251")
+  fos_user_fos_user_parent_user_idTofos_user              fos_user?             @relation("fos_user_parent_user_idTofos_user", fields: [parent_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_957A6479D526A7D3")
+  other_fos_user_fos_user_parent_user_idTofos_user        fos_user[]            @relation("fos_user_parent_user_idTofos_user")
+  fos_user_user_group                                     fos_user_user_group[]
+
+  @@index([userDistributorBO_id], map: "IDX_957A647946781D86")
+  @@index([code_bo], map: "IDX_957A647953FCFE54")
+  @@index([delegation_id], map: "IDX_957A647956CBBCF5")
+  @@index([gouvernorat_id], map: "IDX_957A647975B74E2D")
+  @@index([code_postal_id], map: "IDX_957A6479B2B59251")
+  @@index([parent_user_id], map: "IDX_957A6479D526A7D3")
+  @@index([cin], map: "IDX_cin")
+  @@index([enabled], map: "IDX_enabled")
+  @@index([phone], map: "IDX_phone")
+  @@index([username], map: "IDX_username")
+}
+
+model fos_user_user_group {
+  user_id   Int
+  group_id  Int
+  fos_user  fos_user  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_B3C77447A76ED395")
+  fos_group fos_group @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_B3C77447FE54D947")
+
+  @@id([user_id, group_id])
+  @@index([user_id], map: "IDX_B3C77447A76ED395")
+  @@index([group_id], map: "IDX_B3C77447FE54D947")
+}
+
+model franchise {
+  id              Int      @id @default(autoincrement())
+  distributeur_id Int?
+  name            String   @unique(map: "UNIQ_66F6CE2A5E237E06") @db.VarChar(100)
+  description     String?  @db.LongText
+  enabled         Boolean  @default(false)
+  createdAt       DateTime @db.DateTime(0)
+  updatedAt       DateTime @db.DateTime(0)
+  used            Boolean  @default(false)
+  mapping_id      String?  @db.VarChar(20)
+
+  @@index([distributeur_id], map: "IDX_66F6CE2A29EB7ACA")
+}
+
+model geolocation {
+  id                      Int       @id @default(autoincrement())
+  operation_activation_id Int?
+  longitude               Float?
+  latitude                Float?
+  created_at              DateTime  @db.DateTime(0)
+  updated_at              DateTime? @db.DateTime(0)
+
+  @@index([operation_activation_id], map: "IDX_9DC0E5B41834EE96")
+}
+
+model gouvernorat {
+  id                       Int                        @id @default(autoincrement())
+  label                    String                     @db.VarChar(255)
+  latitude                 Float?
+  longitude                Float?
+  code_default             Int?
+  labelBscs                String                     @db.VarChar(255)
+  fos_user                 fos_user[]
+  info_bscs                info_bscs[]
+  report_group_gouvernorat report_group_gouvernorat[] @ignore
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model historique_user {
+  id                Int      @id @default(autoincrement())
+  action_user_id    Int
+  action_user_login String   @db.VarChar(255)
+  result_user_id    Int
+  result_user_login String   @db.VarChar(255)
+  field             String   @db.LongText
+  modification      String   @db.LongText
+  type              String   @db.VarChar(255)
+  date_modif        DateTime @db.DateTime(0)
+  story             String?  @db.VarChar(255)
+  cause             String?  @db.VarChar(255)
+}
+
+model import_sims {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  filename    String   @db.VarChar(255)
+  imported_at DateTime @db.DateTime(0)
+  status_text String?  @db.LongText
+  status      Int      @db.SmallInt
+  checksum    String   @db.LongText
+  nbr_ligne   Int?
+  nbr_packs   Int?
+  type        Int?     @db.SmallInt
+  forceUpdate Boolean? @default(false)
+
+  @@index([user_id], map: "IDX_EBBBFB2DA76ED395")
+  @@index([filename], map: "IDX_filename")
+  @@index([status], map: "IDX_status")
+}
+
+model info_bscs {
+  id                   Int               @id @default(autoincrement())
+  contract_id          Int?              @unique(map: "UNIQ_386BFCF12576E0FD")
+  town_id              Int?
+  gouvernorat_id       Int?
+  localite_id          Int?
+  type_pi_saisie       Int?
+  pi_saisie            String?           @db.VarChar(250)
+  nationalityPasseport String?           @db.VarChar(255)
+  titre                String?           @db.VarChar(50)
+  lastname             String?           @db.VarChar(100)
+  first_name           String?           @db.VarChar(100)
+  sexe                 String?           @db.VarChar(10)
+  birthdate            DateTime?         @db.DateTime(0)
+  situation            String?           @db.VarChar(50)
+  langue               String?           @db.VarChar(50)
+  pays                 String?           @db.VarChar(50)
+  rue                  String?           @db.VarChar(100)
+  houseNo              Int?
+  cityOrBuilding       String?           @db.VarChar(100)
+  floorNo              Int?
+  emailAddr            String?           @db.VarChar(100)
+  telNo1               String?           @db.VarChar(13)
+  nationalite          String?           @db.VarChar(50)
+  status_contract      String?           @db.VarChar(20)
+  digital_contract     digital_contract? @relation(fields: [contract_id], references: [id], onUpdate: NoAction, map: "FK_386BFCF12576E0FD")
+  gouvernorat          gouvernorat?      @relation(fields: [gouvernorat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_386BFCF175B74E2D")
+  town                 town?             @relation(fields: [town_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_386BFCF175E23604")
+  localite             localite?         @relation(fields: [localite_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_386BFCF1924DD2B5")
+
+  @@index([gouvernorat_id], map: "IDX_386BFCF175B74E2D")
+  @@index([town_id], map: "IDX_386BFCF175E23604")
+  @@index([localite_id], map: "IDX_386BFCF1924DD2B5")
+}
+
+model infocentreactivation {
+  id                Int       @id @default(autoincrement())
+  BSCS_CUST_CODE    String    @db.VarChar(255)
+  NUM_SIM_INFO      String    @db.VarChar(255)
+  MSISDN            String    @db.VarChar(255)
+  DATE_ACTIVATION   DateTime  @db.DateTime(0)
+  CODE_CONTRACT     String    @db.VarChar(255)
+  BSCS_CO_ACTIVATED DateTime  @db.DateTime(0)
+  USER_LOGIN        String    @db.VarChar(255)
+  TYPE_PIECE_IDENT  String    @db.VarChar(255)
+  NUM_PIECE_IDENT   String    @db.VarChar(255)
+  CODE_POS          String    @db.VarChar(255)
+  SYSTEME_SOURCE    String    @db.VarChar(255)
+  DIST              String    @db.VarChar(255)
+  CODE_DIST         String?   @db.VarChar(255)
+  DATE_CHGT         DateTime? @db.DateTime(0)
+  CONTR_PACK        String    @db.VarChar(255)
+  OFFRE_PRODUIT     String    @db.VarChar(255)
+
+  @@index([NUM_SIM_INFO], map: "IDX_NUM_SIM_INFO")
+}
+
+model infocentresaisie {
+  id               Int       @id @default(autoincrement())
+  NUMERO_APPEL     String    @db.VarChar(255)
+  NUMERO_SERIE     String    @db.VarChar(255)
+  DATE_SAISIE      DateTime  @db.DateTime(0)
+  LOGIN            String    @db.VarChar(255)
+  NOM_PRENOM       String    @db.VarChar(255)
+  CODE_CONTRAT     String    @db.VarChar(255)
+  CODE_CLIENT      String    @db.VarChar(255)
+  TYPE_PIECE_IDENT String    @db.VarChar(255)
+  NUM_PIECE_IDENT  String    @db.VarChar(255)
+  DATE_CHGT        DateTime? @db.DateTime(0)
+
+  @@index([NUMERO_SERIE], map: "IDX_NUMERO_SERIE")
+}
+
+model localite {
+  id            Int         @id @default(autoincrement())
+  delegation_id Int?
+  code_postal   Int
+  label         String      @db.VarChar(255)
+  enabled       Boolean
+  fos_user      fos_user[]
+  info_bscs     info_bscs[]
+
+  @@index([delegation_id], map: "IDX_F5D7E4A956CBBCF5")
+}
+
+model log_action {
+  id                  Int      @id @default(autoincrement())
+  username            String?  @db.VarChar(128)
+  user_ip             String?  @db.VarChar(128)
+  action              Int
+  discriminator       String?  @db.VarChar(20)
+  site_cna_id         Int?
+  site                String?  @db.VarChar(128)
+  created_at          DateTime @db.DateTime(0)
+  action_by_id        Int
+  digital_contract_id Int?
+  rev_contract_id     Int?
+  bon_livraison_id    Int?
+  rev_bl_id           Int?
+  action_key          BigInt
+  bordereau_id        Int?
+  rev_bordereau_id    Int?
+
+  @@index([action_by_id], map: "IDX_5236DF304D29ECB8")
+  @@index([bordereau_id, rev_bordereau_id], map: "IDX_5236DF3055D5304ED793CAD1")
+  @@index([site_cna_id], map: "IDX_5236DF3073943760")
+  @@index([bon_livraison_id, rev_bl_id], map: "IDX_5236DF30D8D16068D9357EA5")
+  @@index([digital_contract_id, rev_contract_id], map: "IDX_5236DF30F9CC00496B78BEAB")
+  @@index([rev_bl_id], map: "rev_bl_id")
+  @@index([rev_contract_id], map: "rev_contract_id")
+}
+
+model log_interfacage {
+  id            Int      @id @default(autoincrement())
+  CODE_ETT      String   @db.VarChar(10)
+  DES_ETT       String?  @db.VarChar(100)
+  CODE_PUBLITEL String?  @db.VarChar(10)
+  DES_PUBLITEL  String?  @db.VarChar(100)
+  DATE_OP       DateTime @db.DateTime(0)
+  NS_DEBUT      String   @db.VarChar(150)
+  NS_FIN        String   @db.VarChar(150)
+  QTE           Int
+  TYPE_OP       String   @db.VarChar(1)
+  ETAT          Int      @default(0)
+  MESSAGE       String?  @db.LongText
+
+  @@index([DATE_OP], map: "IDX_date_op")
+}
+
+model mail_ema_maj {
+  id         Int    @id @default(autoincrement())
+  fullname   String @db.VarChar(100)
+  phone      Int?   @unique(map: "UNIQ_8C87EA0D444F97DD")
+  mailAdress String @db.LongText
+}
+
+model mailadress {
+  id            Int    @id @default(autoincrement())
+  mail_offre_id Int?
+  mailAdress    String @db.LongText
+
+  @@index([mail_offre_id], map: "IDX_AAE68FAB911F9112")
+}
+
+model mailoffre {
+  id          Int      @id @default(autoincrement())
+  contenu     String   @db.LongText
+  nbmailoffre Int
+  updated_at  DateTime @db.DateTime(0)
+  nb_days     Int
+}
+
+model maj_bscs_ema {
+  id        Int      @id @default(autoincrement())
+  doMAJBscs Boolean? @default(true)
+}
+
+model message_reply {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  message     String  @db.LongText
+  code        Int
+  description String? @db.LongText
+  channel     String  @db.VarChar(255)
+
+  @@index([code], map: "IDX_code")
+}
+
+model mobile_dsa {
+  id                        Int @id @default(autoincrement())
+  blocking_time             Int
+  maximum_number_size       Int
+  maximum_number_msisdn_dsa Int
+}
+
+model mobile_dsa_audit {
+  id                        Int
+  rev                       Int
+  blocking_time             Int?
+  maximum_number_size       Int?
+  maximum_number_msisdn_dsa Int?
+  revtype                   String @db.VarChar(4)
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_38d65215382bc16609fb1796497935ad_idx")
+}
+
+model msisdn {
+  msisdn       Int       @id
+  user_id      Int?
+  sim_pack_id  BigInt?
+  brand_id     Int?
+  sim          BigInt    @unique(map: "UNIQ_D8AB442ECAC210")
+  imsi         BigInt?   @unique(map: "UNIQ_D8AB441719CC2F")
+  imported_at  DateTime  @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  sold_at      DateTime? @db.DateTime(0)
+  cutoff_at    DateTime? @db.DateTime(0)
+  sold         Int       @db.SmallInt
+  cutoff       Int       @db.SmallInt
+  isDsa        Boolean?  @default(false)
+  brand_dsa_id Int?
+  offre_dsa_id Int?
+
+  @@index([brand_id], map: "IDX_D8AB4444F5D008")
+  @@index([brand_dsa_id], map: "IDX_D8AB445C786BA")
+  @@index([sim_pack_id], map: "IDX_D8AB4484EA4054")
+  @@index([user_id], map: "IDX_D8AB44A76ED395")
+  @@index([offre_dsa_id], map: "IDX_D8AB44E1C59A9F")
+  @@index([sold_at], map: "sold_at_idx")
+  @@index([sold], map: "sold_idx")
+}
+
+model msisdn_dsa {
+  id               Int       @id @default(autoincrement())
+  msisdn           BigInt
+  locked           Boolean?  @default(false)
+  locked_at        DateTime? @db.DateTime(0)
+  second_lock      Boolean?  @default(false)
+  second_locked_at DateTime? @db.DateTime(0)
+  brand_dsa_id     Int?
+
+  @@index([brand_dsa_id], map: "IDX_4BE9EA135C786BA")
+}
+
+model msisdn_history {
+  id             Int             @id @default(autoincrement())
+  msisdn_id      Int?
+  user_id        Int?
+  campagne_id    Int?
+  sim_pack_id    BigInt?
+  brand_id       Int?
+  sim            BigInt
+  action_at      DateTime        @db.DateTime(0)
+  action         Int             @db.SmallInt
+  extra_info     String          @db.LongText
+  channel        String?         @db.VarChar(255)
+  piece_identif  String?         @db.VarChar(9)
+  cin_pp         String?         @db.VarChar(50)
+  pays           String?         @db.VarChar(100)
+  isDigitalised  Boolean?        @default(false)
+  brand_dsa_id   Int?
+  isDsa          Boolean?        @default(false)
+  imsi           BigInt?
+  offre_dsa_id   Int?
+  activation_cna activation_cna?
+
+  @@index([campagne_id], map: "IDX_45E444F716227374")
+  @@index([brand_id], map: "IDX_45E444F744F5D008")
+  @@index([action, sim], map: "IDX_45E444F747CC8C922ECAC210")
+  @@index([brand_dsa_id], map: "IDX_45E444F75C786BA")
+  @@index([sim_pack_id], map: "IDX_45E444F784EA4054")
+  @@index([user_id], map: "IDX_45E444F7A76ED395")
+  @@index([msisdn_id], map: "IDX_45E444F7D429DFE8")
+  @@index([offre_dsa_id], map: "IDX_45E444F7E1C59A9F")
+  @@index([action_at], map: "action_at_idx")
+  @@index([action], map: "action_idx")
+  @@index([sim], map: "sim_idx")
+}
+
+model msisdn_provisioning {
+  id        Int      @id @default(autoincrement())
+  msisdn_id Int?
+  user_id   Int?
+  brand_id  Int?
+  sim       BigInt
+  action_at DateTime @db.DateTime(0)
+
+  @@index([brand_id], map: "IDX_53F9C41244F5D008")
+  @@index([user_id], map: "IDX_53F9C412A76ED395")
+  @@index([msisdn_id], map: "IDX_53F9C412D429DFE8")
+}
+
+model notification_stock {
+  id                       Int      @id @default(autoincrement())
+  user_id                  Int
+  created_at               DateTime @db.DateTime(0)
+  updated_at               DateTime @db.DateTime(0)
+  stock_disponible_nbr     Int
+  stock_disponible_percent Int
+  status                   Int      @db.SmallInt
+  readed                   Int      @db.SmallInt
+
+  @@index([user_id], map: "IDX_8D82B399A76ED395")
+}
+
+model offre {
+  id         Int     @id @default(autoincrement())
+  title      String  @unique(map: "UNIQ_AF86866F2B36786B") @db.VarChar(255)
+  produit    String? @db.VarChar(255)
+  enable     Boolean @default(true)
+  used       Boolean @default(false)
+  mapping_id String? @db.VarChar(20)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model offre_dsa {
+  id                 Int       @id @default(autoincrement())
+  brand_dsa_id       Int
+  label_offers       String    @db.VarChar(45)
+  trade_name         String?   @unique(map: "UNIQ_6E1ED93C3CD809FD") @db.VarChar(45)
+  trade_code         Int?      @unique(map: "UNIQ_6E1ED93C15EE4763")
+  status_offers      Boolean
+  start_date         DateTime? @db.DateTime(0)
+  end_date           DateTime? @db.DateTime(0)
+  sms                String?   @db.LongText
+  rp_shdes           String?   @db.VarChar(45)
+  content_xml        String?   @db.LongText
+  nbreUtilisation    Int       @default(0)
+  created_by         Int?
+  desactivated_by    Int?
+  activated_by       Int?
+  created_at         DateTime  @db.DateTime(0)
+  desactivated_at    DateTime? @db.DateTime(0)
+  activated_at       DateTime? @db.DateTime(0)
+  active             Boolean   @default(false)
+  statusOnAt         DateTime? @db.DateTime(0)
+  statusOffAt        DateTime? @db.DateTime(0)
+  statusOn_by        Int?
+  statusOff_by       Int?
+  specific_offre     Boolean   @default(false)
+  distributer_status Int       @default(0)
+  distributers       String?   @db.LongText
+  franchise_status   Int       @default(0)
+  franchises         String?   @db.LongText
+  ett_status         Int       @default(0)
+  etts               String?   @db.LongText
+
+  @@index([statusOff_by], map: "IDX_6E1ED93C23632774")
+  @@index([activated_by], map: "IDX_6E1ED93C255FA5E4")
+  @@index([desactivated_by], map: "IDX_6E1ED93C4E5BB1E2")
+  @@index([brand_dsa_id], map: "IDX_6E1ED93C5C786BA")
+  @@index([statusOn_by], map: "IDX_6E1ED93CBBA9CC0A")
+  @@index([created_by], map: "IDX_6E1ED93CDE12AB56")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model offre_dsa_audit {
+  id                 Int
+  rev                Int
+  brand_dsa_id       Int?
+  label_offers       String?   @db.VarChar(45)
+  trade_name         String?   @db.VarChar(45)
+  trade_code         Int?
+  status_offers      Boolean?
+  start_date         DateTime? @db.DateTime(0)
+  end_date           DateTime? @db.DateTime(0)
+  sms                String?   @db.LongText
+  content_xml        String?   @db.LongText
+  rp_shdes           String?   @db.VarChar(45)
+  nbreUtilisation    Int?      @default(0)
+  revtype            String    @db.VarChar(4)
+  created_by         Int?
+  desactivated_by    Int?
+  activated_by       Int?
+  created_at         DateTime? @db.DateTime(0)
+  desactivated_at    DateTime? @db.DateTime(0)
+  activated_at       DateTime? @db.DateTime(0)
+  active             Boolean?  @default(false)
+  statusOnAt         DateTime? @db.DateTime(0)
+  statusOffAt        DateTime? @db.DateTime(0)
+  statusOn_by        Int?
+  statusOff_by       Int?
+  specific_offre     Boolean   @default(false)
+  distributer_status Int       @default(0)
+  distributers       String?   @db.LongText
+  franchise_status   Int       @default(0)
+  franchises         String?   @db.LongText
+  ett_status         Int       @default(0)
+  etts               String?   @db.LongText
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_3cfc7fc487b7a5e4a0092ead3d99abda_idx")
+}
+
+model old_sim {
+  numero  Int       @id
+  user_id Int?
+  sim     BigInt
+  sold_at DateTime? @db.DateTime(0)
+  sold    Int       @db.SmallInt
+
+  @@index([user_id], map: "IDX_B1F3F928A76ED395")
+  @@index([numero, user_id, sold], map: "oldsims_idx")
+}
+
+model operation_activation {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  msisdn        Int?
+  created_at    DateTime  @db.DateTime(0)
+  updated_at    DateTime? @db.DateTime(0)
+  status        Int       @db.SmallInt
+  text_status   String?   @db.VarChar(255)
+  sim           BigInt?
+  channel       String?   @db.VarChar(10)
+  piece_identif String?   @db.VarChar(9)
+  cin_pp        String?   @db.VarChar(50)
+  pays          String?   @db.VarChar(100)
+  dirnum        Int?
+  brand_id      Int?
+  offre_id      Int?
+  isDsa         Boolean?  @default(false)
+  brand_dsa_id  Int?
+  isEma         Boolean?  @default(false)
+  syncBscs      Boolean?  @default(false)
+  longitude     Float?
+  latitude      Float?
+  zone          String?   @db.VarChar(255)
+
+  @@index([brand_id], map: "IDX_52FF0FAA44F5D008")
+  @@index([offre_id], map: "IDX_52FF0FAA4CC8505A")
+  @@index([brand_dsa_id], map: "IDX_52FF0FAA5C786BA")
+  @@index([status, cin_pp, piece_identif, created_at], map: "IDX_52FF0FAA7B00651C68A3281CC5AC246F8B8E8428")
+  @@index([status, user_id, updated_at], map: "IDX_52FF0FAA7B00651CA76ED39543625D9F")
+  @@index([user_id], map: "IDX_52FF0FAAA76ED395")
+  @@index([created_at], map: "IDX_created_at")
+  @@index([msisdn], map: "IDX_msisdn")
+  @@index([status], map: "IDX_status")
+}
+
+model performance_pos {
+  id              Int       @id @default(autoincrement())
+  user_id         Int?
+  date            DateTime  @db.DateTime(0)
+  updated_at      DateTime? @db.DateTime(0)
+  pos_id          Int?
+  stock_init      Int       @default(0)
+  stock_recu      Int       @default(0)
+  stock_vendu     Int       @default(0)
+  stock_restant   Int       @default(0)
+  performance     Boolean
+  stock_recupere  Int       @default(0)
+  stock_old_vendu Int       @default(0)
+  indicateur      Int
+
+  @@index([pos_id], map: "IDX_AC065B9E41085FAE")
+  @@index([user_id], map: "IDX_AC065B9EA76ED395")
+}
+
+model pilotage_action_type {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  description String?   @db.LongText
+  created_at  DateTime  @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+}
+
+model pilotage_concept {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  description String?   @db.LongText
+  created_at  DateTime  @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+}
+
+model pilotage_product {
+  id              Int       @id @default(autoincrement())
+  brand_id        Int?
+  quantity        Int
+  sales           Int?
+  created_at      DateTime  @db.DateTime(0)
+  updated_at      DateTime? @db.DateTime(0)
+  stMktgAction_id Int?
+
+  @@index([stMktgAction_id], map: "IDX_D9C3A987145AEEFF")
+  @@index([brand_id], map: "IDX_D9C3A98744F5D008")
+}
+
+model pilotage_reason_cancel {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  description String?   @db.LongText
+  created_at  DateTime  @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+}
+
+model pilotage_street_marketing_action {
+  id              Int       @id @default(autoincrement())
+  gouvernorat_id  Int?
+  delegation_id   Int?
+  concept_id      Int?
+  status          Int?
+  goal            String?   @db.LongText
+  address         String    @db.LongText
+  is_validated    Boolean
+  validated_at    DateTime? @db.DateTime(0)
+  started_at      DateTime  @db.DateTime(0)
+  ended_at        DateTime  @db.DateTime(0)
+  created_at      DateTime  @db.DateTime(0)
+  updated_at      DateTime? @db.DateTime(0)
+  codePostal_id   Int?
+  actionType_id   Int?
+  reasonCancel_id Int?
+  userPv_id       Int?
+
+  @@index([actionType_id], map: "IDX_3FE03CE231F263E7")
+  @@index([codePostal_id], map: "IDX_3FE03CE24B405581")
+  @@index([delegation_id], map: "IDX_3FE03CE256CBBCF5")
+  @@index([gouvernorat_id], map: "IDX_3FE03CE275B74E2D")
+  @@index([reasonCancel_id], map: "IDX_3FE03CE2EA51F673")
+  @@index([userPv_id], map: "IDX_3FE03CE2EC1E766")
+  @@index([concept_id], map: "IDX_3FE03CE2F909284E")
+}
+
+model pilotage_street_marketing_action_user {
+  id                Int      @id @default(autoincrement())
+  addedAt           DateTime @db.DateTime(0)
+  stMktgActionId_id Int?
+  userId_id         Int?
+
+  @@index([stMktgActionId_id], map: "IDX_C9638F685E5BF189")
+  @@index([userId_id], map: "IDX_C9638F6899218D81")
+}
+
+model pilotage_validation_type {
+  id               Int       @id @default(autoincrement())
+  user_id          Int?
+  is_automatic_DVD Boolean
+  created_at       DateTime  @db.DateTime(0)
+  updated_at       DateTime? @db.DateTime(0)
+  is_automatic_DVI Boolean
+
+  @@index([user_id], map: "IDX_1ACAE6EFA76ED395")
+}
+
+model pilotage_validation_type_audit {
+  id               Int
+  rev              Int
+  user_id          Int?
+  is_automatic_DVD Boolean?
+  created_at       DateTime? @db.DateTime(0)
+  updated_at       DateTime? @db.DateTime(0)
+  revtype          String    @db.VarChar(4)
+  is_automatic_DVI Boolean?
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_4c3fc2394f948200fe620aab58b5d66f_idx")
+}
+
+model plage {
+  id        Int    @id @default(autoincrement())
+  brand_id  Int
+  rangefrom BigInt
+  rangeto   BigInt
+
+  @@index([brand_id], map: "IDX_107196C944F5D008")
+  @@index([rangefrom], map: "IDX_rangefrom")
+  @@index([rangeto], map: "IDX_rangeto")
+}
+
+model point_vente {
+  id                  Int       @id @default(autoincrement())
+  gouvernorat_id      Int?
+  delegation_id       Int?
+  nom                 String?   @db.VarChar(255)
+  reseau              String?   @db.VarChar(255)
+  is_proprieteTT      Boolean?
+  date_contract       DateTime? @db.DateTime(0)
+  duree_location      String?   @db.VarChar(255)
+  montant_loyer       String?   @db.VarChar(255)
+  is_propre           Boolean?
+  rent_paid_by        String?   @db.VarChar(255)
+  rent_topay          String?   @db.VarChar(255)
+  proprietaire        String?   @db.VarChar(255)
+  cin_proprietaire    String?   @db.VarChar(10)
+  status              String?   @db.VarChar(255)
+  date_mise_service   DateTime? @db.DateTime(0)
+  date_prev_ouverture DateTime? @db.DateTime(0)
+  budget              String?   @db.VarChar(100)
+  status_validation   String?   @db.VarChar(100)
+  date_validation     DateTime? @db.DateTime(0)
+  date_proposition    DateTime? @db.DateTime(0)
+  attente_commission  Boolean?
+  attente_visite      Boolean?
+  motif_refus         String?   @db.VarChar(300)
+  adresse             String?   @db.VarChar(255)
+  nom_responsable     String?   @db.VarChar(255)
+  prenom_responsable  String?   @db.VarChar(255)
+  cin_responsable     String?   @db.VarChar(20)
+  code                String?   @db.VarChar(255)
+  longitude           Float?
+  latitude            Float?
+  typePVente_id       Int?
+  codePostal_id       Int?
+
+  @@index([codePostal_id], map: "IDX_2BBFAADF4B405581")
+  @@index([delegation_id], map: "IDX_2BBFAADF56CBBCF5")
+  @@index([gouvernorat_id], map: "IDX_2BBFAADF75B74E2D")
+  @@index([typePVente_id], map: "IDX_2BBFAADF96F79D71")
+}
+
+model prefix_dsa {
+  id           Int  @id @default(autoincrement())
+  prefix       Int
+  brand_dsa_id Int?
+
+  @@index([brand_dsa_id], map: "IDX_BFB523D25C786BA")
+}
+
+model prefix_dsa_audit {
+  id           Int
+  rev          Int
+  brand_dsa_id Int?
+  prefix       Int?
+  revtype      String @db.VarChar(4)
+
+  @@id([id, rev])
+  @@index([rev], map: "rev_5aabee624fb864bb6fd1b0687841dc8e_idx")
+}
+
+model quantity {
+  id                     Int  @id @default(autoincrement())
+  user_id                Int?
+  stock_pred_total_dispo Int  @default(0)
+  stock_pred_total_vendu Int  @default(0)
+  stock_dsa_total_dispo  Int  @default(0)
+  stock_dsa_total_vendu  Int  @default(0)
+
+  @@index([user_id], map: "IDX_9FF31636A76ED395")
+}
+
+model quantity_marque {
+  id           Int    @id @default(autoincrement())
+  brand_dsa_id Int?
+  brand_id     Int?
+  quantity_id  Int
+  stock_dispo  Int    @default(0)
+  stock_vendu  Int    @default(0)
+  type         String @db.VarChar(255)
+
+  @@index([brand_id], map: "IDX_57D7DCDC44F5D008")
+  @@index([brand_dsa_id], map: "IDX_57D7DCDC5C786BA")
+  @@index([quantity_id], map: "IDX_57D7DCDC7E8B4AFC")
+}
+
+model recyclage_history {
+  id          BigInt    @id @default(autoincrement())
+  date        DateTime  @db.DateTime(0)
+  msisdn      String    @db.VarChar(50)
+  old_sim     String    @db.VarChar(50)
+  new_sim     String    @db.VarChar(50)
+  old_status  String    @db.VarChar(50)
+  new_status  String    @db.VarChar(50)
+  old_owner   Int?
+  new_owner   Int?
+  old_brand   Int?
+  new_brand   Int?
+  sell_date   DateTime? @db.DateTime(0)
+  cutoff_date DateTime? @db.DateTime(0)
+  new_msisdn  String    @db.VarChar(50)
+  isDsa       Boolean?  @default(false)
+
+  @@index([new_owner], map: "IDX_3121D75B37F6A5A1")
+  @@index([old_owner], map: "IDX_3121D75B69F42C9A")
+  @@index([old_brand], map: "IDX_3121D75BBAC633BE")
+  @@index([new_brand], map: "IDX_3121D75BE4C4BA85")
+  @@index([msisdn], map: "IDX_new_sim")
+}
+
+model relance_external_stock_operation {
+  id            Int      @id @default(autoincrement())
+  CODE_ETT      String   @db.VarChar(10)
+  DES_ETT       String?  @db.VarChar(100)
+  CODE_PUBLITEL String?  @db.VarChar(10)
+  DES_PUBLITEL  String?  @db.VarChar(100)
+  DATE_OP       DateTime @db.DateTime(0)
+  NS_DEBUT      String   @db.VarChar(150)
+  NS_FIN        String   @db.VarChar(150)
+  QTE           Int
+  TYPE_OP       String   @db.VarChar(1)
+  MESSAGE       String?  @db.VarChar(255)
+
+  @@index([DATE_OP], map: "IDX_date_op")
+}
+
+model report {
+  id                          Int                           @id @default(autoincrement())
+  code                        String                        @unique(map: "UNIQ_C42F778477153098") @db.VarChar(10)
+  name                        String                        @unique(map: "UNIQ_C42F77845E237E06") @db.VarChar(100)
+  channel                     Int
+  administratorcontact_report administratorcontact_report[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model report_group {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @db.VarChar(50)
+  recipient_emails         String                     @db.LongText
+  cc_emails                String                     @db.LongText
+  status                   Boolean?
+  created_at               DateTime                   @db.DateTime(0)
+  updated_at               DateTime?                  @db.DateTime(0)
+  report_group_gouvernorat report_group_gouvernorat[] @ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model report_group_gouvernorat {
+  report_group_id Int
+  gouvernorat_id  Int
+  report_group    report_group @relation(fields: [report_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "IDX_957A6579D726A7D8")
+  gouvernorat     gouvernorat  @relation(fields: [gouvernorat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "IDX_957A6579D726A7D9")
+
+  @@index([report_group_id], map: "IDX_957A6579D726A7D8")
+  @@index([gouvernorat_id], map: "IDX_957A6579D726A7D9")
+  @@ignore
+}
+
+model revisions {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @db.DateTime(0)
+  username  String?  @db.VarChar(255)
+}
+
+model sequencebonlivraison {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @db.DateTime(0)
+  updatedAt DateTime? @db.DateTime(0)
+}
+
+model sequencebordereau {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @db.DateTime(0)
+  updatedAt DateTime? @db.DateTime(0)
+}
+
+model sim {
+  sim          BigInt    @id @unique(map: "UNIQ_2ECAC2102ECAC210")
+  brand_dsa_id Int?
+  brand_id     Int?
+  user_id      Int?
+  sim_pack_id  BigInt
+  msisdn       Int?
+  imsi         BigInt?
+  sold_at      DateTime? @db.DateTime(0)
+  sold         Int       @db.SmallInt
+  is_dsa       Boolean
+
+  @@index([brand_id], map: "IDX_2ECAC21044F5D008")
+  @@index([brand_dsa_id], map: "IDX_2ECAC2105C786BA")
+  @@index([sim_pack_id], map: "IDX_2ECAC21084EA4054")
+  @@index([user_id], map: "IDX_2ECAC210A76ED395")
+}
+
+model sim_dsa {
+  id           Int       @id @default(autoincrement())
+  brand_dsa_id Int
+  user_id      Int?
+  sim          BigInt    @unique(map: "UNIQ_ECA2FF552ECAC210")
+  imsi         BigInt    @unique(map: "UNIQ_ECA2FF551719CC2F")
+  sim_pack     BigInt
+  imported_at  DateTime  @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  sold_at      DateTime? @db.DateTime(0)
+  sold         Int       @default(0) @db.SmallInt
+  msisdn       Int?
+
+  @@index([brand_dsa_id], map: "IDX_ECA2FF555C786BA")
+  @@index([user_id], map: "IDX_ECA2FF55A76ED395")
+  @@index([sim_pack], map: "IDX_ECA2FF55E160858D")
+}
+
+model sim_import {
+  id                Int       @id @default(autoincrement())
+  user_id           Int?
+  simfrom           BigInt
+  total_sims        Int
+  imported_at       DateTime  @db.DateTime(0)
+  final_imported_id DateTime? @db.DateTime(0)
+
+  @@index([user_id], map: "IDX_BCCB2298A76ED395")
+}
+
+model sim_pack {
+  simfrom           BigInt    @id
+  user_id           Int?
+  distribute_by     Int?
+  simimport_id      Int
+  recover_user_id   Int?
+  total_sims        Int
+  imported_at       DateTime  @db.DateTime(0)
+  updated_at        DateTime? @db.DateTime(0)
+  status            Int       @db.SmallInt
+  sold_sims_count   Int
+  cutoff_sims_count Int
+  brand_id          Int?
+  distributed_at    DateTime? @db.DateTime(0)
+  recuperated_at    DateTime? @db.DateTime(0)
+  isDsa             Boolean?  @default(false)
+  brand_dsa_id      Int?
+  old_user          Int?
+  received_at       DateTime? @db.DateTime(0)
+
+  @@index([brand_id], map: "IDX_E160858D44F5D008")
+  @@index([brand_dsa_id], map: "IDX_E160858D5C786BA")
+  @@index([simimport_id], map: "IDX_E160858D772AC561")
+  @@index([distribute_by], map: "IDX_E160858DA3C8C8B0")
+  @@index([old_user], map: "IDX_E160858DA50E57EC")
+  @@index([user_id], map: "IDX_E160858DA76ED395")
+  @@index([recover_user_id], map: "IDX_E160858DD1809D21")
+  @@index([status], map: "IDX_status")
+}
+
+model sim_stat {
+  id            Int      @id @default(autoincrement())
+  n_publitel    String   @db.VarChar(12)
+  piece_identif String   @db.VarChar(9)
+  cin_pp        String   @db.VarChar(50)
+  nbr_sim       Int?
+  updated_at    DateTime @db.DateTime(0)
+  nbr_sim_data  Int?
+
+  @@index([cin_pp], map: "IDX_cin_pp")
+  @@index([n_publitel], map: "IDX_n_publitel")
+}
+
+model sms_mo {
+  id            Int       @id @default(autoincrement())
+  date          DateTime  @db.DateTime(0)
+  timecreated   DateTime  @db.DateTime(0)
+  soa           String    @db.VarChar(25)
+  da            String    @db.VarChar(25)
+  content       String    @db.LongText
+  raw           String?   @db.LongText
+  status        Int?
+  tryscount     Int?
+  try           Int?
+  timenextfetch DateTime? @db.DateTime(0)
+}
+
+model sms_mt {
+  id            Int       @id @default(autoincrement())
+  date          DateTime  @db.DateTime(0)
+  da            String    @db.VarChar(25)
+  content       String    @db.LongText
+  raw           String?   @db.LongText
+  status        Int?
+  tryscount     Int?
+  try           Int?
+  timenextfetch DateTime? @db.DateTime(0)
+}
+
+model stat_day {
+  id                         Int       @id @default(autoincrement())
+  date                       DateTime? @db.DateTime(0)
+  vente_total                Int?
+  stock_total                Int?
+  vente_sous_campagne        Int?
+  bonus_compagne             Float?
+  vente_sous_campagne_pos    String?   @db.LongText
+  bonus_compagne_pos         String?   @db.LongText
+  vente_par_pos              String?   @db.LongText
+  stock_par_pos              String?   @db.LongText
+  vente_marque               String?   @db.LongText
+  vente_marque_pos           String?   @db.LongText
+  sucess_total               Int?
+  sucess_par_pos             String?   @db.LongText
+  erreurs_total              Int?
+  erreurs_par_pos            String?   @db.LongText
+  cutoff_total               Int?
+  pos_actif_total            Int?
+  pos_inactif_total          Int?
+  pos_actives_total          Int?
+  pos_desactives_total       Int?
+  ussd_total                 Int?
+  ussd_par_pos               String?   @db.LongText
+  sms_total                  Int?
+  sms_par_pos                String?   @db.LongText
+  web_total                  Int?
+  web_par_pos                String?   @db.LongText
+  vente_par_gov              String?   @db.LongText
+  pos_status_par_pos         String?   @db.LongText
+  pos_enables_par_pos        String?   @db.LongText
+  mobile_total               Int?
+  mobile_par_pos             String?   @db.LongText
+  digitalise_total           Int?
+  digitalise_par_pos         String?   @db.LongText
+  vente_dsa_sous_campagne    Int?
+  bonus_dsa_compagne         Float?
+  vente_dsa_marque           String?   @db.LongText
+  vente_dsa_compagne_par_pos String?   @db.LongText
+  bonus_dsa_compagne_par_pos String?   @db.LongText
+  vente_dsa_marque_par_pos   String?   @db.LongText
+  stock_dsa_total            Int?
+  stock_dsa_par_pos          String?   @db.LongText
+  offline_total              Int?
+  offline_par_pos            String?   @db.LongText
+
+  @@index([date], map: "date_idx")
+}
+
+model stat_hour {
+  id                         Int       @id @default(autoincrement())
+  date                       DateTime? @db.DateTime(0)
+  vente_total                Int?
+  stock_total                Int?
+  vente_sous_campagne        Int?
+  bonus_compagne             Float?
+  vente_sous_campagne_pos    String?   @db.LongText
+  bonus_compagne_pos         String?   @db.LongText
+  vente_par_pos              String?   @db.LongText
+  stock_par_pos              String?   @db.LongText
+  vente_marque               String?   @db.LongText
+  vente_marque_pos           String?   @db.LongText
+  sucess_total               Int?
+  sucess_par_pos             String?   @db.LongText
+  erreurs_total              Int?
+  erreurs_par_pos            String?   @db.LongText
+  cutoff_total               Int?
+  pos_actif_total            Int?
+  pos_inactif_total          Int?
+  pos_actives_total          Int?
+  pos_desactives_total       Int?
+  ussd_total                 Int?
+  ussd_par_pos               String?   @db.LongText
+  sms_total                  Int?
+  sms_par_pos                String?   @db.LongText
+  web_total                  Int?
+  web_par_pos                String?   @db.LongText
+  mobile_total               Int?
+  mobile_par_pos             String?   @db.LongText
+  digitalise_total           Int?
+  digitalise_par_pos         String?   @db.LongText
+  vente_par_gov              String?   @db.LongText
+  pos_status_par_pos         String?   @db.LongText
+  pos_enables_par_pos        String?   @db.LongText
+  offline_total              Int?
+  offline_par_pos            String?   @db.LongText
+  vente_dsa_total            Int?
+  cutoff_dsa_total           Int?
+  web_dsa_total              Int?
+  mobile_dsa_total           Int?
+  sms_dsa_total              Int?
+  ussd_dsa_total             Int?
+  digitalise_dsa_total       Int?
+  offline_dsa_total          Int?
+  vente_dsa_sous_campagne    Int?
+  bonus_dsa_compagne         Float?
+  erreurs_dsa_total          Int?
+  sucess_dsa_total           Int?
+  vente_dsa_par_pos          String?   @db.LongText
+  vente_dsa_marque           String?   @db.LongText
+  vente_dsa_par_gov          String?   @db.LongText
+  pos_dsa_status_par_pos     String?   @db.LongText
+  vente_dsa_compagne_par_pos String?   @db.LongText
+  bonus_dsa_compagne_par_pos String?   @db.LongText
+  success_dsa_par_pos        String?   @db.LongText
+  erreur_dsa_par_pos         String?   @db.LongText
+  vente_dsa_marque_par_pos   String?   @db.LongText
+  web_dsa_par_pos            String?   @db.LongText
+  sms_dsa_par_pos            String?   @db.LongText
+  ussd_dsa_par_pos           String?   @db.LongText
+  mobile_dsa_par_pos         String?   @db.LongText
+  digitalise_dsa_par_pos     String?   @db.LongText
+  offline_dsa_par_pos        String?   @db.LongText
+  stock_dsa_total            Int?
+  stock_dsa_par_pos          String?   @db.LongText
+
+  @@index([date], map: "date_idx")
+}
+
+model stat_month {
+  id                         Int       @id @default(autoincrement())
+  date                       DateTime? @db.DateTime(0)
+  vente_total                Int?
+  stock_total                Int?
+  vente_sous_campagne        Int?
+  bonus_compagne             Float?
+  vente_sous_campagne_pos    String?   @db.LongText
+  bonus_compagne_pos         String?   @db.LongText
+  vente_par_pos              String?   @db.LongText
+  stock_par_pos              String?   @db.LongText
+  vente_marque               String?   @db.LongText
+  vente_marque_pos           String?   @db.LongText
+  sucess_total               Int?
+  sucess_par_pos             String?   @db.LongText
+  erreurs_total              Int?
+  erreurs_par_pos            String?   @db.LongText
+  cutoff_total               Int?
+  pos_actif_total            Int?
+  pos_inactif_total          Int?
+  pos_actives_total          Int?
+  pos_desactives_total       Int?
+  ussd_total                 Int?
+  ussd_par_pos               String?   @db.LongText
+  sms_total                  Int?
+  sms_par_pos                String?   @db.LongText
+  web_total                  Int?
+  web_par_pos                String?   @db.LongText
+  mobile_total               Int?
+  mobile_par_pos             String?   @db.LongText
+  digitalise_total           Int?
+  digitalise_par_pos         String?   @db.LongText
+  vente_par_gov              String?   @db.LongText
+  pos_status_par_pos         String?   @db.LongText
+  pos_enables_par_pos        String?   @db.LongText
+  offline_total              Int?
+  offline_par_pos            String?   @db.LongText
+  vente_dsa_sous_campagne    Int?
+  bonus_dsa_compagne         Float?
+  vente_dsa_marque           String?   @db.LongText
+  vente_dsa_compagne_par_pos String?   @db.LongText
+  bonus_dsa_compagne_par_pos String?   @db.LongText
+  vente_dsa_marque_par_pos   String?   @db.LongText
+  stock_dsa_total            Int?
+  stock_dsa_par_pos          String?   @db.LongText
+
+  @@index([date], map: "date_idx")
+}
+
+model stat_week {
+  id                         Int       @id @default(autoincrement())
+  date                       DateTime? @db.DateTime(0)
+  vente_total                Int?
+  stock_total                Int?
+  vente_sous_campagne        Int?
+  bonus_compagne             Float?
+  vente_sous_campagne_pos    String?   @db.LongText
+  bonus_compagne_pos         String?   @db.LongText
+  vente_par_pos              String?   @db.LongText
+  stock_par_pos              String?   @db.LongText
+  vente_marque               String?   @db.LongText
+  vente_marque_pos           String?   @db.LongText
+  sucess_total               Int?
+  sucess_par_pos             String?   @db.LongText
+  erreurs_total              Int?
+  erreurs_par_pos            String?   @db.LongText
+  cutoff_total               Int?
+  pos_actif_total            Int?
+  pos_inactif_total          Int?
+  pos_actives_total          Int?
+  pos_desactives_total       Int?
+  ussd_total                 Int?
+  ussd_par_pos               String?   @db.LongText
+  sms_total                  Int?
+  sms_par_pos                String?   @db.LongText
+  web_total                  Int?
+  web_par_pos                String?   @db.LongText
+  mobile_total               Int?
+  mobile_par_pos             String?   @db.LongText
+  digitalise_total           Int?
+  digitalise_par_pos         String?   @db.LongText
+  vente_par_gov              String?   @db.LongText
+  pos_status_par_pos         String?   @db.LongText
+  pos_enables_par_pos        String?   @db.LongText
+  offline_total              Int?
+  offline_par_pos            String?   @db.LongText
+  vente_dsa_sous_campagne    Int?
+  bonus_dsa_compagne         Float?
+  vente_dsa_marque           String?   @db.LongText
+  vente_dsa_compagne_par_pos String?   @db.LongText
+  bonus_dsa_compagne_par_pos String?   @db.LongText
+  vente_dsa_marque_par_pos   String?   @db.LongText
+  stock_dsa_total            Int?
+  stock_dsa_par_pos          String?   @db.LongText
+
+  @@index([date], map: "date_idx")
+}
+
+model town {
+  id             Int         @id @default(autoincrement())
+  gouvernorat_id Int?
+  label          String      @db.VarChar(255)
+  code_postal    Int
+  info_bscs      info_bscs[]
+
+  @@index([gouvernorat_id], map: "IDX_4CE6C7A475B74E2D")
+}
+
+model tracking_sms {
+  id       Int      @id @default(autoincrement())
+  user_id  Int?
+  date     DateTime @db.DateTime(0)
+  sender   Int
+  sms      String   @db.VarChar(255)
+  response String   @db.VarChar(255)
+
+  @@index([date], map: "DATE")
+  @@index([sender], map: "SENDER")
+  @@index([user_id], map: "USER")
+}
+
+model transact_ema {
+  id  Int @id @default(autoincrement())
+  num Int @default(1)
+}
+
+model type_group {
+  id           Int         @id @default(autoincrement())
+  code         Int         @unique(map: "UNIQ_63CCC33277153098")
+  name         String      @db.VarChar(255)
+  prefix       String?     @db.VarChar(1)
+  notification String      @db.LongText
+  fos_group    fos_group[]
+}
+
+model type_point_vente {
+  id    Int     @id @default(autoincrement())
+  type  String  @db.VarChar(255)
+  color String? @db.VarChar(10)
+}

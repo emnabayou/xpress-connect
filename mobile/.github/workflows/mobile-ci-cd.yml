@@ -1,0 +1,115 @@
+name: Mobile CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Which version to package ? ex: '1.0.0', '2.0.0', .."
+        required: true
+        default: '1.0.0'
+
+
+jobs:
+  build:
+    name: Build and Release APP Bundle and APK
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        cache: 'gradle'
+        check-latest: true
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.9'
+
+    - name: Install Dependencies
+      run: flutter pub get
+
+    - name: Set App Version
+      run: bash ./_scripts/replace_version.sh ${{ inputs.version }}+${{ github.run_number }}
+
+    #- name: Build IPA
+    #  run: |
+    #      cd mobile && \
+    #      flutter build ios --no-codesign
+    #      cd build/ios/iphoneos
+    #      mkdir Payload
+    #      cd Payload
+    #      ln -s ../Runner.app
+    #      cd ..
+    #      zip -r app.ipa Payload
+
+    
+    - name: Decode Keystore
+      id: decode_keystore
+      uses: timheuer/base64-to-file@v1.2
+      with:
+        fileName: 'upload-keystore.jks'
+        fileDir: '/home/runner/work/XC-mobile/XC-mobile/android/app/keystore/'
+        encodedString: ${{ secrets.KEYSTORE }}
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+    - name: Set Environment Variables and Create key properties
+      run: |
+        bash ./_scripts/create_key_properties.sh ${{ secrets.KEYSTORE_PASSWORD }} ${{ secrets.KEY_PASSWORD }} ${{ secrets.KEY_ALIAS }} ${{ secrets.KEYSTORE_FILE_PATH }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build APK
+      run: flutter build apk --release
+
+    - name: Build App Bundle
+      run: flutter build appbundle
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: rnta-${{ inputs.version }}
+        release_name: XC-Mobile v${{ inputs.version }}
+        body: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload APK
+      id: upload-release-apk
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-release.apk
+        asset_name: app-release.apk
+        asset_content_type: application/vnd.android.package-archive
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload App Bundle
+      id: upload-release-aab
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/app/outputs/bundle/release/app-release.aab
+        asset_name: app-release.aab
+        asset_content_type: application/x-binary-android-apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+
+    # - name: upload artifact to Firebase App Distribution
+    #   uses: wzieba/Firebase-Distribution-Github-Action@v1
+    #   with:
+    #     appId: ${{secrets.FIREBASE_APP_ID}}
+    #     serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+    #     groups: testers
+    #     file: build/app/outputs/bundle/release/app-release.aab
